@@ -1,0 +1,16 @@
+Description,Count,Designator,Footprint,Mouser Part #
+22pF capacitor,2,"C1, C2",0805,187-CL21C220JBANNNC
+0.1uF capacitor,4,"C3, C6, C7, C9",0805,187-CL21B104KBFNNNE
+0.33uF electrolytic capacitor,3,"C4, C5, C8",SMD electrolytic 4.0x5.4,647-UWP1HR33MCL
+1N4148 diode,1,D1,SOD-123,241-1N4148W_R1_00001
+AVR programming header,1,J1,2x3 mane pin header 2.54mm pitch (shroud),710-61200621621
+4.7k resistor,4,"R1, R2, R3, R4",0805,603-RT0805FRE074K7L
+tactile push button,1,SW1,SMD tactile button 6x6mm,179-TS046670BK160SMT
+Atmega328PB microcontroller,1,U1,TQFP-32,556-ATMEGA328PB-AU
+Mini-DIN 6pin connector,3,"U2,U3,U5",Mini-DIN 6pin through-hole,571-5749180-1
+LM358 opamp,1,U4,SOIC-8,863-LM358EDR2G
+7805 linear voltage regulator,1,U6,SOT-252,621-AS7805ADTR-G1
+7905 linear voltage regulator,1,U7,SOT-89,511-L79L05ABU-TR
+DSUB-9 female connector,1,U8,DSUB-9 female through-hole,649-ID09S33E4GV00LF
+DSUB-15 female connector,1,U9,DSUB-15 female through-hole,649-ID15S33E4GX00LF
+Crystal 3.6864MHz,1,Y1,SMD HC49-SD,815-ABLS-3.6864M-T
