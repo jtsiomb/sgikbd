@@ -6,3 +6,7 @@
 *.dcm
 *-cache.lib
 *.kicad_prl
+
+*.eep
+*.hex
+*.map

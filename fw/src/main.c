@@ -6,7 +6,7 @@
 #include "serial.h"
 #include "scantbl.h"
 #include "ps2kbd.h"
-#include "amigakb.h"
+#include "sgikb.h"
 #include "defs.h"
 #include "timer.h"
 
@@ -14,22 +14,14 @@ enum {
 	KF_BRK = 1,
 	KF_EXT = 2,
 	KF_EXT1 = 4,
-
-	KF_CTRL		= 16,
-	KF_LAMIGA	= 32,
-	KF_RAMIGA	= 64
 };
-#define KF_TRANSIENT	0x0f
-#define KF_STICKY		0xf0
-
-#define RESET_WAIT 1000
 
 static unsigned char led_state;
 
 int main(void)
 {
 	unsigned int keyflags = 0;
-	unsigned char c, keycode, prev_drvled = 0;
+	unsigned char c, keycode;
 	int press;
 
 	/* disable all pullups globally */
@@ -43,29 +35,14 @@ int main(void)
 	init_timer();
 
 	/* initialize the UART and enable interrupts */
-	init_serial(9600);
+	init_serial(0, 600, 8, PAR_ODD, 1);
 	sei();
-
-	printf("PS/2 keyboard controller - John Tsiombikas <nuclear@member.fsf.org>\r\n");
 
 	EIMSK = (1 << INT0) | (1 << INT1);	/* enable ps/2 clock interrupt */
 
 	ps2setled(0);	/* start with all LEDs off */
 
 	for(;;) {
-		while(!ps2pending()) {
-			unsigned char drvled = PIND & ADRVLED_BIT;
-			if(drvled != prev_drvled) {
-				prev_drvled = drvled;
-				if(drvled) {
-					led_state |= PS2LED_SCRLK;
-				} else {
-					led_state &= ~PS2LED_SCRLK;
-				}
-				ps2setled(led_state);
-			}
-		}
-
 		c = ps2read();
 		switch(c) {
 		case 0xe0:	/* extended */
@@ -95,57 +72,14 @@ int main(void)
 				}
 			}
 
-			switch(keycode) {
-			case AMIKEY_CTRL:
-				if(press)
-					keyflags |= KF_CTRL;
-				else
-					keyflags &= ~KF_CTRL;
-				break;
-
-			case AMIKEY_LAMI:
-				if(press)
-					keyflags |= KF_LAMIGA;
-				else
-					keyflags &= ~KF_LAMIGA;
-				break;
-
-			case AMIKEY_RAMI:
-				if(press)
-					keyflags |= KF_RAMIGA;
-				else
-					keyflags &= ~KF_RAMIGA;
-				break;
-
-			default:
-				break;
-			}
-
-			if((keyflags & (KF_CTRL | KF_RAMIGA | KF_LAMIGA)) == (KF_CTRL | KF_RAMIGA | KF_LAMIGA)) {
-				printf("CTRL - AMIGA - AMIGA!\r\n");
-				amikb_reset();
-
-				keyflags = 0;
-
-				reset_timer();
-				while(get_msec() < RESET_WAIT);
-				ps2clearbuf();
-
-				break;
-			}
-
 			if(keycode != 0xff) {
-				int press = ~keyflags & KF_BRK;
-				amikb_sendkey(keycode, press);
+				press = ~keyflags & KF_BRK;
+				sgi_sendkey(keycode, press);
 				if(keycode == 0x62 && press) {
 					led_state ^= PS2LED_CAPSLK;
 					ps2setled(led_state);
 				}
-				/*printf("scancode %x -> [%s] amiga key %xh\r\n", (unsigned int)c, press ? "press" : "release", keycode);*/
-			} else {
-				printf("PS/2 unknown command or keycode: %x\r\n", (unsigned int)c);
 			}
-			keyflags &= ~KF_TRANSIENT;
 		}
 	}
 	return 0;

@@ -7,96 +7,106 @@
 #endif
 #endif
 
-#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <avr/power.h>
 
-static int uart_send_char(char c, FILE *fp);
-static int uart_get_char(FILE *fp);
-
 #define BUF_SZ	16
 #define BUF_IDX_MASK	(BUF_SZ - 1)
 #define NEXT_IDX(x)	(((x) + 1) & BUF_IDX_MASK)
-static char outbuf[BUF_SZ];
-static volatile unsigned char out_rd, out_wr;
-static char inbuf[BUF_SZ];
-static volatile unsigned char in_rd, in_wr;
 
-static FILE std_stream = FDEV_SETUP_STREAM(uart_send_char, uart_get_char, _FDEV_SETUP_RW);
-
+struct uartdata {
+	unsigned char inbuf[BUF_SZ];
+	volatile unsigned char in_rd, in_wr;
+} ubuf[2];
 
 
-void init_serial(long baud)
+/* value for USART ctrl reg B: rx/tx enable & rx interrupt */
+#define CTLB	((1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0))
+
+void init_serial(int uidx, long baud, int bits, int par, int stop)
 {
+	static const unsigned int ucszbits[] = {3, 3, 3, 3, 3, 0, 1, 2, 3, 3, 3, 3, 7};
 	unsigned int ubrr_val = F_CPU / 16 / baud - 1;
+	unsigned int ucsz = ucszbits[bits];
+	unsigned int ffmt;
 
-	power_usart0_enable();
+	ffmt = (ucsz & 3) << 1;
+	if(par) {
+		ffmt |= ((par & 1) | 2) << 4;
+	}
+	if(stop > 1) {
+		ffmt |= 1 << 3;	/* 2 stop bits */
+	}
 
-	/* set baud generator timer reset value */
-	UBRR0H = (unsigned char)(ubrr_val >> 8);
-	UBRR0L = (unsigned char)ubrr_val;
+	switch(uidx) {
+	case 0:
+		power_usart0_enable();
+		UBRR0H = (unsigned char)(ubrr_val >> 8);
+		UBRR0L = (unsigned char)ubrr_val;
+		UCSR0B = CTLB;
+		UCSR0C = ffmt;
+		UCSR0A = (UCSR0A & 0xfb) | (ucsz & 4);
+		break;
 
-	/* enable rx/tx and recv interrupt */
-	UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-	/* set frame format: 8n1 */
-	UCSR0C = 3 << UCSZ00;
+	case 1:
+		power_usart1_enable();
+		UBRR1H = (unsigned char)(ubrr_val >> 8);
+		UBRR1L = (unsigned char)ubrr_val;
+		UCSR1B = CTLB;
+		UCSR1C = ffmt;
+		UCSR1A = (UCSR1A & 0xfb) | (ucsz & 4);
 
-	stdin = stdout = stderr = &std_stream;
+	default:
+		break;
+	}
+
+	ubuf[uidx].in_rd = ubuf[uidx].in_wr = 0;
 }
 
-int have_input(void)
+int have_input(int uidx)
 {
-	return in_wr != in_rd;
+	return ubuf[uidx].in_wr != ubuf[uidx].in_rd;
 }
 
-static int uart_send_char(char c, FILE *fp)
+int uart_write(int uidx, unsigned char c)
 {
-	/*int next;*/
+	switch(uidx) {
+	case 0:
+		while((UCSR0A & (1 << UDRE0)) == 0);
+		UDR0 = (unsigned char)c;
+		return 0;
 
-	while((UCSR0A & (1 << UDRE0)) == 0);
-	UDR0 = (unsigned char)c;
-#if 0
-	next = NEXT_IDX(out_wr);
-	while(next == out_rd);
+	case 1:
+		while((UCSR1A & (1 << UDRE1)) == 1);
+		UDR1 = (unsigned char)c;
+		return 0;
+	}
 
-	outbuf[out_wr] = c;
-	out_wr = next;
-
-	/* enable the Tx data register empty interrupt */
-	UCSR0B |= 1 << UDRIE0;
-#endif
-	return 0;
+	return -1;
 }
 
-static int uart_get_char(FILE *fp)
+int uart_read(int uidx)
 {
-	char c;
+	int c;
+	struct uartdata *u = ubuf + uidx;
 
-	while(in_rd == in_wr);
+	while(u->in_rd == u->in_wr);
 
-	c = inbuf[in_rd];
-	in_rd = NEXT_IDX(in_rd);
+	c = u->inbuf[u->in_rd];
+	u->in_rd = NEXT_IDX(u->in_rd);
 	return c;
 }
 
 ISR(USART_RX_vect)
 {
-	char c = UDR0;
-
-	inbuf[in_wr] = c;
-	in_wr = NEXT_IDX(in_wr);
+	ubuf[0].inbuf[ubuf[0].in_wr] = UDR0;
+	ubuf[0].in_wr = NEXT_IDX(ubuf[0].in_wr);
 }
 
-/* USART Tx data register empty (can send more data) */
-ISR(USART_UDRE_vect)
+ISR(USART1_RX_vect)
 {
-	if(out_rd != out_wr) {
-		UDR0 = outbuf[out_rd];
-		out_rd = NEXT_IDX(out_rd);
-	} else {
-		/* no more data to send for now, disable the interrupt */
-		UCSR0B &= ~(1 << UDRIE0);
-	}
+	ubuf[1].inbuf[ubuf[1].in_wr] = UDR1;
+	ubuf[1].in_wr = NEXT_IDX(ubuf[1].in_wr);
 }
