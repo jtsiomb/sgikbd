@@ -27,7 +27,10 @@ int main(void)
 	/* disable all pullups globally */
 	MCUCR |= 1 << PUD;
 
+	DDRB = 0;
+	DDRC = 0;
 	DDRD = 0;
+	DDRE = 0;
 	PORTD = 0;
 	EIMSK = 0;	/* mask external interrupts */
 	EICRA = (1 << ISC11) | (1 << ISC01);	/* falling edge interrupts */
@@ -43,41 +46,45 @@ int main(void)
 	ps2setled(0);	/* start with all LEDs off */
 
 	for(;;) {
-		c = ps2read();
-		switch(c) {
-		case 0xe0:	/* extended */
-			keyflags |= KF_EXT;
-			break;
+		sgi_procinp();
 
-		case 0xe1:	/* extended */
-			keyflags |= KF_EXT1;
-			break;
+		if(ps2pending()) {
+			c = ps2read();
+			switch(c) {
+			case 0xe0:	/* extended */
+				keyflags |= KF_EXT;
+				break;
 
-		case 0xf0:	/* break code */
-			keyflags |= KF_BRK;
-			break;
+			case 0xe1:	/* extended */
+				keyflags |= KF_EXT1;
+				break;
 
-		default:
-			press = !(keyflags & KF_BRK);
+			case 0xf0:	/* break code */
+				keyflags |= KF_BRK;
+				break;
 
-			keycode = 0xff;
-			if(keyflags & KF_EXT) {
-				if(c < KEYMAP_EXT_SIZE) {
-					keycode = keymap_ext[(int)c];
+			default:
+				press = !(keyflags & KF_BRK);
+
+				keycode = 0xff;
+				if(keyflags & KF_EXT) {
+					if(c < KEYMAP_EXT_SIZE) {
+						keycode = keymap_ext[(int)c];
+					}
+				} else if(keyflags & KF_EXT1) {
+				} else {
+					if(c < KEYMAP_NORMAL_SIZE) {
+						keycode = keymap_normal[(int)c];
+					}
 				}
-			} else if(keyflags & KF_EXT1) {
-			} else {
-				if(c < KEYMAP_NORMAL_SIZE) {
-					keycode = keymap_normal[(int)c];
-				}
-			}
 
-			if(keycode != 0xff) {
-				press = ~keyflags & KF_BRK;
-				sgi_sendkey(keycode, press);
-				if(keycode == 0x62 && press) {
-					led_state ^= PS2LED_CAPSLK;
-					ps2setled(led_state);
+				if(keycode != 0xff) {
+					press = ~keyflags & KF_BRK;
+					sgi_sendkey(keycode, press);
+					if(keycode == 0x62 && press) {
+						led_state ^= PS2LED_CAPSLK;
+						ps2setled(led_state);
+					}
 				}
 			}
 		}
