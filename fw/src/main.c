@@ -16,22 +16,20 @@ enum {
 	KF_EXT1 = 4,
 };
 
-static unsigned char led_state;
-
 int main(void)
 {
 	unsigned int keyflags = 0;
 	unsigned char c, keycode;
 	int press;
 
-	/* disable all pullups globally */
-	MCUCR |= 1 << PUD;
-
 	DDRB = 0;
 	DDRC = 0;
 	DDRD = 0;
 	DDRE = 0;
-	PORTD = 0;
+	PORTB = 0xff;
+	PORTC = 0xff;
+	PORTD = 0xc3;	/* no pull-ups on PS/2 ports, pull-up on RX0 */
+	PORTE = 0xff;
 	EIMSK = 0;	/* mask external interrupts */
 	EICRA = (1 << ISC11) | (1 << ISC01);	/* falling edge interrupts */
 
@@ -64,8 +62,6 @@ int main(void)
 				break;
 
 			default:
-				press = !(keyflags & KF_BRK);
-
 				keycode = 0xff;
 				if(keyflags & KF_EXT) {
 					if(c < KEYMAP_EXT_SIZE) {
@@ -81,11 +77,8 @@ int main(void)
 				if(keycode != 0xff) {
 					press = ~keyflags & KF_BRK;
 					sgi_sendkey(keycode, press);
-					if(keycode == 0x62 && press) {
-						led_state ^= PS2LED_CAPSLK;
-						ps2setled(led_state);
-					}
 				}
+				keyflags = 0;
 			}
 		}
 	}
