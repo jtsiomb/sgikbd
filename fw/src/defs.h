@@ -4,26 +4,20 @@
 #include <avr/io.h>
 
 /* pin assignments:
- * D2	PS/2 clock (INT0)
- * D3	amikbd clock (INT1)
- * D4	PS/2 data
- * D5	amikbd data
- * D6	amiga reset
- * D7	amiga drvled in
+ * D2	kb clock (INT0)
+ * D3	mouse clock (INT1)
+ * D4	kb data
+ * D5	mouse data
  */
 
-#define PCLK	2
-#define ACLK	3
-#define PDATA	4
-#define ADATA	5
-#define ARST	6
-#define ADRVLED	7
+#define KCLK	2
+#define MCLK	3
+#define KDATA	4
+#define MDATA	5
 
-#define PCLK_BIT	(1 << PCLK)
-#define ACLK_BIT	(1 << ACLK)
-#define PDATA_BIT	(1 << PDATA)
-#define ADATA_BIT	(1 << ADATA)
-#define ARST_BIT	(1 << ARST)
-#define ADRVLED_BIT	(1 << ADRVLED)
+#define KCLK_BIT	(1 << KCLK)
+#define MCLK_BIT	(1 << MCLK)
+#define KDATA_BIT	(1 << KDATA)
+#define MDATA_BIT	(1 << MDATA)
 
 #endif	/* DEFS_H_ */

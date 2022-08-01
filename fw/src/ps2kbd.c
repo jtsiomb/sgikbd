@@ -13,6 +13,8 @@
 static volatile unsigned char keybuf[BUF_SZ];
 static volatile unsigned char key_rd, key_wr;
 
+static volatile short mx, my;
+
 static volatile int send_nbits, wait_ack;
 static volatile unsigned char send_val, send_par;
 
@@ -26,16 +28,16 @@ int ps2write(unsigned char c)
 	send_par = 0;	/* init to 0, will be calculated while sending */
 
 	/* inhibit transmission, hold at least 100us */
-	PORTD &= ~PCLK_BIT;
-	DDRD |= PCLK_BIT;
+	PORTD &= ~KCLK_BIT;
+	DDRD |= KCLK_BIT;
 	EIFR |= (1 << INTF0);	/* clear pending interrupt due to clock transition */
 	sei();
 	_delay_us(100);
 
 	/* RTS by data low & release clock (this counts as start bit?) */
-	PORTD &= ~PDATA_BIT;
-	DDRD |= PDATA_BIT;
-	DDRD &= ~PCLK_BIT;
+	PORTD &= ~KDATA_BIT;
+	DDRD |= KDATA_BIT;
+	DDRD &= ~KCLK_BIT;
 
 	reset_timer();
 	while(send_nbits > 0) {
@@ -50,7 +52,7 @@ int ps2write(unsigned char c)
 	cli();
 	wait_ack = 1;
 	sei();
-	DDRD &= ~PDATA_BIT;
+	DDRD &= ~KDATA_BIT;
 	reset_timer();
 	while(wait_ack) {
 		if(get_msec() > TIMEOUT) {
@@ -67,10 +69,10 @@ static void abort_send(void)
 	send_nbits = 0;
 	wait_ack = 0;
 	/* hold clock low for 100us */
-	PORTD &= ~PCLK_BIT;
-	DDRD |= PCLK_BIT;
+	PORTD &= ~KCLK_BIT;
+	DDRD |= KCLK_BIT;
 	_delay_us(100);
-	DDRD &= ~(PCLK_BIT | PDATA_BIT);
+	DDRD &= ~(KCLK_BIT | KDATA_BIT);
 	EIFR |= (1 << INTF0);	/* clear pending interrupt */
 	sei();
 }
@@ -145,7 +147,7 @@ ISR(INT0_vect)
 	static int nbits;
 
 	if(wait_ack) {
-		if(!(PIND & PDATA_BIT)) {
+		if(!(PIND & KDATA_BIT)) {
 			wait_ack = 0;
 		}
 		return;
@@ -156,20 +158,20 @@ ISR(INT0_vect)
 		switch(send_nbits) {
 		case 1:		/* parity bit */
 			if(send_par & 1) {	/* odd number of ones: parity 0 */
-				PORTD &= ~PDATA_BIT;
+				PORTD &= ~KDATA_BIT;
 			} else {	/* even number of ones: parity 1 */
-				PORTD |= PDATA_BIT;
+				PORTD |= KDATA_BIT;
 			}
 			break;
 		case 0:	/* stop bit: 1 */
-			PORTD |= PDATA_BIT;
+			PORTD |= KDATA_BIT;
 			break;
 		default:
 			if(send_val & 1) {
-				PORTD |= PDATA_BIT;
+				PORTD |= KDATA_BIT;
 				++send_par;
 			} else {
-				PORTD &= ~PDATA_BIT;
+				PORTD &= ~KDATA_BIT;
 			}
 			send_val >>= 1;
 		}
@@ -177,12 +179,12 @@ ISR(INT0_vect)
 	} else {
 		if(nbits > 0 && nbits < 9) {
 			value >>= 1;
-			if(PIND & PDATA_BIT) {
+			if(PIND & KDATA_BIT) {
 				value |= 0x80;
 				parity ^= 1;
 			}
 		}/* else if(nbits == 9) {
-			valp = (PIND >> PDATA) & 1;
+			valp = (PIND >> KDATA) & 1;
 		}*/
 		if(++nbits >= 11) {
 			nbits = 0;
