@@ -5,8 +5,8 @@
 #include <util/delay.h>
 #include "serial.h"
 #include "scantbl.h"
-#include "ps2kbd.h"
-#include "sgikb.h"
+#include "ps2.h"
+#include "sgi.h"
 #include "defs.h"
 #include "timer.h"
 
@@ -22,11 +22,11 @@ void proc_psaux(void);
 int main(void)
 {
 	DDRB = 0;
-	DDRC = 0;
+	DDRC = 3;	/* debug out */
 	DDRD = 0;
 	DDRE = 0;
 	PORTB = 0xff;
-	PORTC = 0xff;
+	PORTC = 0xfc;
 	PORTD = 0xc3;	/* no pull-ups on PS/2 ports, pull-up on RX0 */
 	PORTE = 0xff;
 	EIMSK = 0;	/* mask external interrupts */
@@ -97,5 +97,11 @@ void proc_atkbd(void)
 
 void proc_psaux(void)
 {
+	struct mouse_input inp;
 
+	if(!psaux_pending()) return;
+
+	psaux_read(&inp);
+
+	sgi_sendmouse(inp.bnstate, inp.dx, inp.dy);
 }

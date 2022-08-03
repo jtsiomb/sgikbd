@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include "ps2kbd.h"
+#include "ps2.h"
 #include "defs.h"
 #include "timer.h"
 
@@ -126,17 +126,14 @@ void ps2kb_clearbuf(void)
 	key_rd = key_wr;
 }
 
-int psaux_init(void)
-{
-}
-
 int psaux_write(unsigned char c)
 {
 	return ps2write(c, MCLK_BIT, MDATA_BIT);
 }
 
-void psaux_read(unsigned char *pkt)
+void psaux_read(struct mouse_input *inp)
 {
+	unsigned char pkt[3];
 	while(key_rd == key_wr);
 
 	cli();
@@ -145,6 +142,10 @@ void psaux_read(unsigned char *pkt)
 	pkt[2] = mpktbuf[mpkt_rd].data[2];
 	mpkt_rd = NEXT_IDX(mpkt_rd);
 	sei();
+
+	inp->bnstate = pkt[0] & 7;
+	inp->dx = (pkt[0] & 0x10) ? -(short)pkt[1] : (short)pkt[1];
+	inp->dy = (pkt[0] & 0x20) ? -(short)pkt[2] : (short)pkt[2];
 }
 
 int psaux_pending(void)
@@ -327,6 +328,9 @@ ISR(INT1_vect)
 					curpkt_byte = 0;
 				}
 			}
+
+			/* XXX debug LEDs */
+			PORTC = (auxstate & 3) | 0xfc;
 
 			value = 0;
 			parity = 0;
