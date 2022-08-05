@@ -87,7 +87,11 @@ static void abort_send(unsigned char ckbit, unsigned char dbit)
 	DDRD |= ckbit;
 	_delay_us(100);
 	DDRD &= ~(ckbit | dbit);
-	EIFR |= (1 << INTF0);	/* clear pending interrupt */
+	if(ckbit == KCLK_BIT) {
+		EIFR |= (1 << INTF0);	/* clear pending interrupt */
+	} else {
+		EIFR |= (1 << INTF1);
+	}
 	sei();
 }
 
@@ -134,7 +138,7 @@ int psaux_write(unsigned char c)
 void psaux_read(struct mouse_input *inp)
 {
 	unsigned char pkt[3];
-	while(key_rd == key_wr);
+	while(mpkt_rd == mpkt_wr);
 
 	cli();
 	pkt[0] = mpktbuf[mpkt_rd].data[0];
@@ -144,8 +148,8 @@ void psaux_read(struct mouse_input *inp)
 	sei();
 
 	inp->bnstate = pkt[0] & 7;
-	inp->dx = (pkt[0] & 0x10) ? -(short)pkt[1] : (short)pkt[1];
-	inp->dy = (pkt[0] & 0x20) ? -(short)pkt[2] : (short)pkt[2];
+	inp->dx = (short)pkt[1] - (((short)pkt[0] << 4) & 0x100);
+	inp->dy = (short)pkt[2] - (((short)pkt[0] << 3) & 0x100);
 }
 
 int psaux_pending(void)
@@ -328,9 +332,6 @@ ISR(INT1_vect)
 					curpkt_byte = 0;
 				}
 			}
-
-			/* XXX debug LEDs */
-			PORTC = (auxstate & 3) | 0xfc;
 
 			value = 0;
 			parity = 0;

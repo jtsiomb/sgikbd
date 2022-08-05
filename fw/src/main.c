@@ -54,7 +54,7 @@ int main(void)
 
 void proc_atkbd(void)
 {
-	unsigned int keyflags = 0;
+	static unsigned int keyflags;
 	unsigned char c, keycode;
 	int press;
 

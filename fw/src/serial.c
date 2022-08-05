@@ -27,7 +27,7 @@ struct uartdata {
 
 void init_serial(int uidx, long baud, int bits, int par, int stop)
 {
-	static const unsigned int ucszbits[] = {3, 3, 3, 3, 3, 0, 1, 2, 3, 3, 3, 3, 7};
+	static const unsigned int ucszbits[] = {3, 3, 3, 3, 3, 0, 1, 2, 3, 7};
 	unsigned int ubrr_val = F_CPU / 16 / baud - 1;
 	unsigned int ucsz = ucszbits[bits];
 	unsigned int ffmt;
@@ -37,7 +37,7 @@ void init_serial(int uidx, long baud, int bits, int par, int stop)
 		ffmt |= ((par & 1) | 2) << 4;
 	}
 	if(stop > 1) {
-		ffmt |= 1 << 3;	/* 2 stop bits */
+		ffmt |= 1 << USBS0;	/* 2 stop bits */
 	}
 
 	switch(uidx) {
@@ -45,18 +45,16 @@ void init_serial(int uidx, long baud, int bits, int par, int stop)
 		power_usart0_enable();
 		UBRR0H = (unsigned char)(ubrr_val >> 8);
 		UBRR0L = (unsigned char)ubrr_val;
-		UCSR0B = CTLB;
+		UCSR0B = CTLB | (ucsz & 4);
 		UCSR0C = ffmt;
-		UCSR0A = (UCSR0A & 0xfb) | (ucsz & 4);
 		break;
 
 	case 1:
 		power_usart1_enable();
 		UBRR1H = (unsigned char)(ubrr_val >> 8);
 		UBRR1L = (unsigned char)ubrr_val;
-		UCSR1B = CTLB;
+		UCSR1B = CTLB | (ucsz & 4);
 		UCSR1C = ffmt;
-		UCSR1A = (UCSR1A & 0xfb) | (ucsz & 4);
 
 	default:
 		break;
@@ -79,7 +77,7 @@ int uart_write(int uidx, unsigned char c)
 		return 0;
 
 	case 1:
-		while((UCSR1A & (1 << UDRE1)) == 1);
+		while((UCSR1A & (1 << UDRE1)) == 0);
 		UDR1 = (unsigned char)c;
 		return 0;
 	}
