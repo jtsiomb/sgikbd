@@ -1,8 +1,6 @@
 SGI - PS/2 keyboard and mouse converter
 =======================================
 
-Progress: prototype board completed, firmware not done.
-
 About
 -----
 This project is a converter for connecting PS/2 keyboards and mice to old
