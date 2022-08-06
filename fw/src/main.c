@@ -27,7 +27,7 @@ int main(void)
 	DDRE = 0;
 	PORTB = 0xff;
 	PORTC = 0xfc;
-	PORTD = 0xc3;	/* no pull-ups on PS/2 ports, pull-up on RX0 */
+	PORTD = 0xff;	/* pull-ups on PS/2 ports, pull-up on RX0 */
 	PORTE = 0xff;
 	EIMSK = 0;	/* mask external interrupts */
 	EICRA = (1 << ISC11) | (1 << ISC01);	/* falling edge interrupts */
