@@ -43,6 +43,9 @@ void sgi_procinp(void)
 			}
 			sgi_ledstate = (sgi_ledstate & 0xfc) | ((c >> 5) & 3);
 		} else {
+			if(c & 2) {	/* complement DS1 and DS2 */
+				sgi_ledstate ^= 3;
+			}
 			sgi_ledstate = (sgi_ledstate & 3) | (c & 0x7c);
 		}
 	}

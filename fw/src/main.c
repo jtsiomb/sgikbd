@@ -21,7 +21,7 @@ void proc_psaux(void);
 
 int main(void)
 {
-	unsigned char prevled;
+	unsigned char prevled, led;
 
 	DDRB = 0;
 	DDRC = 3;	/* debug out */
@@ -44,14 +44,15 @@ int main(void)
 	EIMSK = (1 << INT0) | (1 << INT1);	/* enable ps/2 clock interrupts */
 
 	ps2kb_setled(0);	/* start with all LEDs off */
+	prevled = 0;
 
 	for(;;) {
-		prevled = sgi_ledstate;
-
 		sgi_procinp();
 
-		if(sgi_ledstate ^ prevled) {
-			ps2kb_setled(((sgi_ledstate & 3) << 1) | ((sgi_ledstate & 4) >> 2));
+		led = ((sgi_ledstate & 3) << 1) | ((sgi_ledstate & 4) >> 2);
+		if(led != prevled) {
+			ps2kb_setled(led);
+			prevled = led;
 		}
 
 		proc_atkbd();
