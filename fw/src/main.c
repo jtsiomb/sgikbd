@@ -21,6 +21,8 @@ void proc_psaux(void);
 
 int main(void)
 {
+	unsigned char prevled;
+
 	DDRB = 0;
 	DDRC = 3;	/* debug out */
 	DDRD = 0;
@@ -44,7 +46,13 @@ int main(void)
 	ps2kb_setled(0);	/* start with all LEDs off */
 
 	for(;;) {
+		prevled = sgi_ledstate;
+
 		sgi_procinp();
+
+		if(sgi_ledstate ^ prevled) {
+			ps2kb_setled(((sgi_ledstate & 3) << 1) | ((sgi_ledstate & 4) >> 2));
+		}
 
 		proc_atkbd();
 		proc_psaux();

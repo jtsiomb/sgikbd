@@ -25,6 +25,8 @@ enum {
 };
 
 
+unsigned char sgi_ledstate;
+
 
 void sgi_procinp(void)
 {
@@ -35,10 +37,13 @@ void sgi_procinp(void)
 
 		/* handle control bytes */
 		if(KBCTL_SEL(c) == KBCTL_SEL0) {
-			if(c & KBCTL0_GETCFG ) {
+			if(c & KBCTL0_GETCFG) {
 				uart_write(0, 110);
 				uart_write(0, 0);	/* DIP switches */
 			}
+			sgi_ledstate = (sgi_ledstate & 0xfc) | ((c >> 5) & 3);
+		} else {
+			sgi_ledstate = (sgi_ledstate & 3) | (c & 0x7c);
 		}
 	}
 }
