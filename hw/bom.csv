@@ -4,6 +4,7 @@ Description,Count,Designator,Footprint,Mouser Part #
 0.33uF electrolytic capacitor,3,"C4, C5, C8",SMD electrolytic 4.0x5.4,647-UWP1HR33MCL
 1N4148 diode,1,D1,SOD-123,241-1N4148W_R1_00001
 AVR programming header,1,J1,2x3 mane pin header 2.54mm pitch (shroud),710-61200621621
+2N7002 n-channel MOSFET,1,Q1,SOT-23,757-T2N7002AKLM
 4.7k resistor,4,"R1, R2, R3, R4",0805,603-RT0805FRE074K7L
 tactile push button,1,SW1,SMD tactile button 6x6mm,179-TS046670BK160SMT
 Atmega328PB microcontroller,1,U1,TQFP-32,556-ATMEGA328PB-AU
