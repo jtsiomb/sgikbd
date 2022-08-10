@@ -28,7 +28,13 @@ Directory structure:
   - `fw` - firmware for the AVR microcontroller.
   - `doc` - relevant documentation.
 
-Project website: http://nuclear.mutantstargoat.com/hw/sgikbd
+This repository only contains source files. For schematics in PDF format,
+zipped gerbers for PCB manufacturing, and human-readable bill of materials, as
+well as detailed build instructions, visit the project website:
+http://nuclear.mutantstargoat.com/hw/sgikbd
+
+Alternatively download the latest release archive from:
+https://github.com/jtsiomb/sgikbd/releases
 
 The firmware is based on my previous
 [a500kbd](https://github.com/jtsiomb/a500kbd) project, so if you see any
