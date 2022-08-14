@@ -64,6 +64,7 @@ int main(void)
 void proc_atkbd(void)
 {
 	static unsigned int keyflags;
+	static unsigned char prev_e0;
 	unsigned char c, keycode;
 	int press;
 
@@ -86,14 +87,22 @@ void proc_atkbd(void)
 	default:
 		keycode = 0xff;
 		if(keyflags & KF_EXT) {
-			if(c < KEYMAP_EXT_SIZE) {
-				keycode = keymap_ext[(int)c];
+			if((c == 0x12 && prev_e0 == 0x7c) || (c == 0x7c && prev_e0 == 0x12)) {
+				keycode = 0x62;	/* print screen */
+				prev_e0 = 0;
+			} else {
+				prev_e0 = c;
+				if(c < KEYMAP_EXT_SIZE) {
+					keycode = keymap_ext[(int)c];
+				}
 			}
 		} else if(keyflags & KF_EXT1) {
+			prev_e0 = 0;
 		} else {
 			if(c < KEYMAP_NORMAL_SIZE) {
 				keycode = keymap_normal[(int)c];
 			}
+			prev_e0 = 0;
 		}
 
 		if(keycode != 0xff) {

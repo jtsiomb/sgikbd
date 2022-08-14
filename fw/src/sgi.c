@@ -82,7 +82,7 @@ void sgi_sendmouse(uint8_t bn, int16_t dx, int16_t dy)
 	y2 = dy - y1;
 
 	bn = ~bn;
-	pkt[0] = 0x80 | ((bn & 1) << 2) | ((bn & 2) >> 1) | ((bn & 4) >> 1);
+	pkt[0] = 0x80 | ((bn & 1) << 2) | ((bn & 6) >> 1);
 	pkt[1] = *(unsigned char*)&x1;
 	pkt[2] = *(unsigned char*)&y1;
 	pkt[3] = *(unsigned char*)&x2;
