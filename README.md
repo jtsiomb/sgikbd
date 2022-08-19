@@ -26,6 +26,7 @@ Directory structure:
 
   - `hw` - hardware: kicad files and pdf schematics.
   - `fw` - firmware for the AVR microcontroller.
+  - `case` - 3D printable enclosure for the sgikbd board.
   - `doc` - relevant documentation.
 
 This repository only contains source files. For schematics in PDF format,
