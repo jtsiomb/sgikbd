@@ -12,12 +12,12 @@ export to STL format.
 
 File list
 ---------
-  - sgikbd.scad: source file, open it with OpenSCAD to export STL files.
-  - sgikbd-bot.stl: STL file containing the bottom part of the case in the
+  - `sgikbd.scad`: source file, open it with OpenSCAD to export STL files.
+  - `sgikbd-bot.stl`: STL file containing the bottom part of the case in the
     default configuration.
-  - sgikbd-top.stl: STL file containing the top part of the case in the default
+  - `sgikbd-top.stl`: STL file containing the top part of the case in the default
     configuration.
-  - sgikbd-top-allports.stl: STL file containing the top part of the case, with
+  - `sgikbd-top-allports.stl`: STL file containing the top part of the case, with
     all SGI ports open (no break-away panels).
 
 Options
