@@ -16,8 +16,8 @@ This converter is not necessary, and will not work, for any later SGI machines,
 like the indy, O2, indigo2, Octane, and so on, because they use PS/2 keyboards
 and mice directly.
 
-> Important note for R3000 indigo owners, a simple hack is necessary to make
-> sgikbd work with R3000 indigos.
+> Important note for R3000 indigo owners! 
+> A simple hack is necessary to make sgikbd work with R3000 indigos.
 > See http://nuclear.mutantstargoat.com/hw/sgikbd/indigo_r3000_hack.html
 
 It's based on an AVR atmega328pb microcontroller, which reads the PS/2
