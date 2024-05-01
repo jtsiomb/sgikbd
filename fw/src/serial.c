@@ -97,7 +97,7 @@ int uart_read(int uidx)
 	return c;
 }
 
-ISR(USART_RX_vect)
+ISR(USART0_RX_vect)
 {
 	ubuf[0].inbuf[ubuf[0].in_wr] = UDR0;
 	ubuf[0].in_wr = NEXT_IDX(ubuf[0].in_wr);
