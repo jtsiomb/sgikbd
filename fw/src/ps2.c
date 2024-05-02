@@ -314,12 +314,10 @@ ISR(INT1_vect)
 				}
 				break;
 
-			case 2:		/* expect ACK after enable data reporting command */
+			case 2:		/* expect ACK after enable data reporting command, ignore anything else until we get it */
 				if(value == PS2_ACK) {
 					auxstate = 0xff;
-				} else {
-					auxstate = 0;
-				}
+				} 
 				break;
 
 			default:
