@@ -47,7 +47,7 @@ leftover references to the Amiga anywhere don't be confused.
 
 License
 -------
-Copyright (C) 2017-2022 John Tsiombikas <nuclear@mutantstargoat.com>
+Copyright (C) 2017-2024 John Tsiombikas <nuclear@mutantstargoat.com>
 
 You are free to use, reproduce, modify, and redistribute any part of this
 project, provided you make any derivative work you release, freely available
