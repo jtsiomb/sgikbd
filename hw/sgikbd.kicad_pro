@@ -59,21 +59,7 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [
-        "silk_over_copper|104481981|106981981|5bccb388-299b-4643-bf57-5dc2ce7ca26d|2df5c496-17e7-45e2-8336-fa61eecd7958",
-        "silk_over_copper|104481981|72981981|0eeb9199-03ed-42a4-b712-bdcaf9bc0e08|ea569363-d39e-43f2-a253-37b2bc04a6a5",
-        "silk_over_copper|104481981|86981981|0eeb9199-03ed-42a4-b712-bdcaf9bc0e08|9ba7b580-dbbe-48b4-9f32-6481ed5a2dff",
-        "silk_over_copper|104481981|92981981|5bccb388-299b-4643-bf57-5dc2ce7ca26d|f20a9fb1-75b8-4004-9fab-0c6470c2779b",
-        "silk_over_copper|131301981|119981981|097883c0-ef86-40e4-8ed4-94fdaaa19b1f|9da295a1-d454-460d-b93b-a2837f8a87b6",
-        "silk_over_copper|139736981|59981981|c78754be-e20c-4028-bf5e-a7c3f093e33e|725c1082-9165-4855-82e6-7d28b0e7e168",
-        "silk_over_copper|170621981|119981981|097883c0-ef86-40e4-8ed4-94fdaaa19b1f|89990f96-3bbc-413c-84cf-32bd23f25943",
-        "silk_over_copper|170706981|59981981|c78754be-e20c-4028-bf5e-a7c3f093e33e|74722585-a959-47ea-af16-5b84f2e37f3c",
-        "silk_over_copper|175386981|82981981|e40fa3ec-89a3-42b1-ad76-f1d24ba780fa|f2ac2996-27d9-4c7e-ad04-88683e4cd140",
-        "silk_over_copper|175386981|96981981|e40fa3ec-89a3-42b1-ad76-f1d24ba780fa|7082b417-e871-4493-b338-b08d9bd0f5f5",
-        "silk_over_copper|179981981|96981981|1e6cb594-9d70-4927-b7fb-a6ac2141f0ed|e40fa3ec-89a3-42b1-ad76-f1d24ba780fa",
-        "silk_over_copper|99981981|72981981|3c40d83c-ca1d-4874-920c-ecd81fe10fe6|0eeb9199-03ed-42a4-b712-bdcaf9bc0e08",
-        "silk_over_copper|99981981|92981981|3c40d83c-ca1d-4874-920c-ecd81fe10fe6|5bccb388-299b-4643-bf57-5dc2ce7ca26d"
-      ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -537,7 +523,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "./gerber",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
@@ -597,11 +583,23 @@
           "label": "DNP",
           "name": "${DNP}",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
-      "name": "Grouped By Value",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },
