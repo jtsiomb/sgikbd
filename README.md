@@ -16,10 +16,6 @@ This converter is not necessary, and will not work, for any later SGI machines,
 like the indy, O2, indigo2, Octane, and so on, because they use PS/2 keyboards
 and mice directly.
 
-> Important note for R3000 indigo owners! 
-> A simple hack is necessary to make sgikbd work with R3000 indigos.
-> See http://nuclear.mutantstargoat.com/hw/sgikbd/indigo_r3000_hack.html
-
 It's based on an AVR atmega328pb microcontroller, which reads the PS/2
 keyboard and mouse ports, and translates scancodes and events to the protocol
 and electrical signalling used by the SGI computers. For details on the
@@ -45,9 +41,20 @@ The firmware is based on my previous
 [a500kbd](https://github.com/jtsiomb/a500kbd) project, so if you see any
 leftover references to the Amiga anywhere don't be confused.
 
+Note: rev3 of the sgikbd board uses a jumper (J2) to select the negative supply
+voltage source. Make sure to **install a jumper there, do not leave it open**.
+In most cases the jumper should be placed in the "default" position, but for
+some workstations (notably the R3000 indigo) which don't provide a negative
+supply on the keyb/mouse port, you might have to move it to the "R3k indigo"
+position instead.
+
+For previous revisions of sgikbd, see
+[these instructions](http://nuclear.mutantstargoat.com/hw/sgikbd/indigo_r3000_hack.html)
+on how to hack it to work with the R3000 indigo.
+
 License
 -------
-Copyright (C) 2017-2024 John Tsiombikas <nuclear@mutantstargoat.com>
+Copyright (C) 2017-2025 John Tsiombikas <nuclear@mutantstargoat.com>
 
 You are free to use, reproduce, modify, and redistribute any part of this
 project, provided you make any derivative work you release, freely available
