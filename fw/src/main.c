@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
 #include <util/delay.h>
 #include "serial.h"
 #include "scantbl.h"
@@ -18,6 +19,13 @@ enum {
 
 void proc_atkbd(void);
 void proc_psaux(void);
+
+ __attribute__((used, naked, section(".init3")))
+static void wdt_init(void)
+{
+	MCUSR = 0;
+	wdt_disable();
+}
 
 int main(void)
 {
@@ -46,6 +54,8 @@ int main(void)
 	ps2kb_setled(0);	/* start with all LEDs off */
 	prevled = 0;
 
+	wdt_enable(WDTO_250MS);
+
 	for(;;) {
 		sgi_procinp();
 
@@ -57,6 +67,8 @@ int main(void)
 
 		proc_atkbd();
 		proc_psaux();
+
+		wdt_reset();
 	}
 	return 0;
 }

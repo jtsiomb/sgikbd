@@ -27,7 +27,7 @@ $(eep): $(bin)
 
 .PHONY: fuses
 fuses:
-	avrdude -c usbtiny -p $(mcu_dude) -U lfuse:w:0xe6:m -U hfuse:w:0xd9:m -U efuse:w:0xf7:m
+	avrdude -c usbtiny -p $(mcu_dude) -U lfuse:w:0xe6:m -U hfuse:w:0xd9:m -U efuse:w:0xfd:m
 
 .PHONY: program
 program: $(hex)
