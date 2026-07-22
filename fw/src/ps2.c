@@ -13,6 +13,10 @@
 static volatile unsigned char keybuf[BUF_SZ];
 static volatile unsigned char key_rd, key_wr;
 
+struct devstate {
+	unsigned char value, parity, nbits;
+};
+
 struct mpkt {
 	unsigned char data[3];
 };
@@ -25,6 +29,8 @@ static volatile int auxstate;
 
 static volatile int send_nbits, wait_ack;
 static volatile unsigned char send_val, send_par;
+
+static struct devstate kb, aux;
 
 static int ps2write(unsigned char c, unsigned char ckbit, unsigned char dbit);
 static void abort_send(unsigned char ckbit, unsigned char dbit);
@@ -40,6 +46,19 @@ static int ps2write(unsigned char c, unsigned char ckbit, unsigned char dbit)
 	send_nbits = 10;
 	send_val = c;
 	send_par = 0;	/* init to 0, will be calculated while sending */
+
+	/* reset receive counters, the device will re-send if it was
+	 * in the middle of a transmission
+	 */
+	if(ckbit == KCLK_BIT) {
+		kb.nbits = 0;
+		kb.value = 0;
+		kb.parity = 0;
+	} else {
+		aux.nbits = 0;
+		aux.value = 0;
+		aux.parity = 0;
+	}
 
 	/* inhibit transmission, hold at least 100us */
 	PORTD &= ~ckbit;
@@ -188,9 +207,7 @@ int ps2kb_setled(unsigned char state)
 
 ISR(INT0_vect)
 {
-	static unsigned char value, parity;
-	/*static unsigned char valp;*/
-	static int nbits;
+	static unsigned char valp;
 
 	if(wait_ack) {
 		if(!(PIND & KDATA_BIT)) {
@@ -223,33 +240,51 @@ ISR(INT0_vect)
 		}
 
 	} else {
-		if(nbits > 0 && nbits < 9) {
-			value >>= 1;
+		if(!kb.nbits) {
+			/* expecting start bit */
+			if(PIND & KDATA_BIT) return;
+
+		} else if(kb.nbits < 9) {
+			kb.value >>= 1;
 			if(PIND & KDATA_BIT) {
-				value |= 0x80;
-				parity ^= 1;
+				kb.value |= 0x80;
+				kb.parity ^= 1;
 			}
-		}/* else if(nbits == 9) {
+
+		} else if(kb.nbits == 9) {
 			valp = (PIND >> KDATA) & 1;
-		}*/
-		if(++nbits >= 11) {
-			nbits = 0;
+		}
+#if 0
+		else if(kb.nbits == 10) {
+			/* expecting stop bit, ignore otherwise */
+			if(!(PIND & KDATA_BIT)) {
+				kb.nbits = 0;
+				kb.value = 0;
+				kb.parity = 0;
+				return;
+			}
+		}
+#endif
+
+		if(++kb.nbits >= 11) {
+			kb.nbits = 0;
 
 			/* check parity */
-			/*if((parity & 1) == (valp & 1)) {}*/
-			keybuf[key_wr] = (unsigned char)value;
-			key_wr = NEXT_IDX(key_wr);
+			if((kb.parity & 1) != (valp & 1)) {
+				/* odd parity is correct, otherwise ignore */
+				keybuf[key_wr] = (unsigned char)kb.value;
+				key_wr = NEXT_IDX(key_wr);
+			}
 
-			value = 0;
-			parity = 0;
+			kb.value = 0;
+			kb.parity = 0;
 		}
 	}
 }
 
 ISR(INT1_vect)
 {
-	static unsigned char value, parity;
-	static int nbits;
+	static unsigned char valp;
 
 	if(wait_ack) {
 		if(!(PIND & MDATA_BIT)) {
@@ -282,30 +317,48 @@ ISR(INT1_vect)
 		}
 
 	} else {
-		if(nbits > 0 && nbits < 9) {
-			value >>= 1;
+		if(aux.nbits == 0) {
+			/* expecting start bit */
+			if(PIND & MDATA_BIT) return;
+
+		} else if(aux.nbits < 9) {
+			aux.value >>= 1;
 			if(PIND & MDATA_BIT) {
-				value |= 0x80;
-				parity ^= 1;
+				aux.value |= 0x80;
+				aux.parity ^= 1;
 			}
-		}/* else if(nbits == 9) {
+
+		} else if(aux.nbits == 9) {
 			valp = (PIND >> MDATA) & 1;
-		}*/
-		if(++nbits >= 11) {
-			nbits = 0;
+		}
+#if 0
+		else if(aux.nbits == 10) {
+			/* expect stop bit, ignore if invalid */
+			if(!(PIND & MDATA_BIT)) {
+				aux.nbits = 0;
+				aux.value = 0;
+				aux.parity = 0;
+				return;
+			}
+		}
+#endif
+		if(++aux.nbits >= 11) {
+			aux.nbits = 0;
 
 			/* check parity */
-			/*if((parity & 1) == (valp & 1)) {}*/
+			if((aux.parity & 1) == (valp & 1)) {
+				goto skip_proc;
+			}
 
 			switch(auxstate) {
 			case 0:		/* not initialized */
-				if(value == 0xaa) {
+				if(aux.value == 0xaa) {
 					auxstate++;
 				}
 				break;
 
 			case 1:		/* expect ID after BAT */
-				if(value == 0) {
+				if(aux.value == 0) {
 					auxstate++;
 					/* enable data reporting */
 					ps2write(0xf4, MCLK_BIT, MDATA_BIT);
@@ -315,13 +368,19 @@ ISR(INT1_vect)
 				break;
 
 			case 2:		/* expect ACK after enable data reporting command, ignore anything else until we get it */
-				if(value == PS2_ACK) {
+				if(aux.value == PS2_ACK) {
 					auxstate = 0xff;
-				} 
+				}
 				break;
 
 			default:
-				curpkt.data[curpkt_byte++] = (unsigned char)value;
+				if(curpkt_byte == 0 && !(aux.value & 8)) {
+					/* first byte is supposed to have bit 3 set, if it doesn't
+					 * assume desync and ignore
+					 */
+					break;
+				}
+				curpkt.data[curpkt_byte++] = (unsigned char)aux.value;
 				if(curpkt_byte >= 3) {
 					mpktbuf[mpkt_wr].data[0] = curpkt.data[0];
 					mpktbuf[mpkt_wr].data[1] = curpkt.data[1];
@@ -330,9 +389,10 @@ ISR(INT1_vect)
 					curpkt_byte = 0;
 				}
 			}
+skip_proc:
 
-			value = 0;
-			parity = 0;
+			aux.value = 0;
+			aux.parity = 0;
 		}
 	}
 }
